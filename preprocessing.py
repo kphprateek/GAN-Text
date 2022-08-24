@@ -66,12 +66,40 @@ def tokenize(arr):
     return tensor
 
 
-if __name__ == "__main__":
-    df = pd.read_csv(dataset_path)
+def dump_tokenizer_tag(tokenizer):
+    with open(tokenizer_file_tag, 'wb') as handle:
+        pickle.dump(tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
+
+def load_tokenizer_tag():
+    with open(tokenizer_file_tag, 'rb') as handle:
+        tokenizer = pickle.load(handle)
+
+    return tokenizer
+
+
+def tokenize_tag(arr):
+    tokenizer = tf.keras.preprocessing.text.Tokenizer(filters='', num_words=vocab_size)
+    tokenizer.fit_on_texts(arr)
+    tensor = tokenizer.texts_to_sequences(arr)
+    tensor = tf.keras.preprocessing.sequence.pad_sequences(tensor,
+                                                           padding='post', maxlen=SEQ_LENGTH)
+    dump_tokenizer_tag(tokenizer)
+    return tensor
+
+
+if __name__ == "__main__":
+    # global d_tag
+    df = pd.read_csv(dataset_path)
+    df_tag = pd.read_csv('C:/Users/nbtc068/Desktop/seqgan-text-generation-tf2/dataset/coco_tag.csv')
     df = df.review[:generated_num]
+    df_tag=df_tag.review[:generated_num]
     d = split_and_clean(df)
+    d_tag=split_and_clean(df_tag)
     d = tokenize(d)
+    d_tag=tokenize_tag(d_tag)
 
     np.savetxt('dataset/positives.txt', d[:generated_num], delimiter=' ', fmt='%i')
     np.savetxt('dataset/negatives.txt', d[generated_num:(2 * generated_num)], delimiter=' ', fmt='%i')
+    np.savetxt('dataset/positives_tag.txt', d_tag[:generated_num], delimiter=' ', fmt='%i')
+    np.savetxt('dataset/negatives_tag.txt', d_tag[generated_num:(2 * generated_num)], delimiter=' ', fmt='%i')
